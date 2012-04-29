@@ -260,6 +260,8 @@ def single(quote_id):
 
 @app.route('/quotes/<int:quote_id>', methods=['DELETE'])
 def remove(quote_id):
+    if not 'user' in session:
+        abort(403)
     quote = db.get(quote_id)
     if quote is None:
         abort(404)
