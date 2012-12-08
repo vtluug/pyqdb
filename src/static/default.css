@@ -278,11 +278,13 @@ blockquote.quote-body {
 	padding: 0;
 	font-family: Consolas, Monaco, Courier New, monospace;
 	font-size: 12px;
+	word-wrap: break-word;
 }
 
 blockquote.quote-body p {
 	margin: 0;
 	padding: 0;
+	word-wrap: break-word;
 }
 
 #confirmation-form blockquote.quote-body,
