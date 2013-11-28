@@ -10,7 +10,13 @@ from flask import Flask, request, session, g, \
 from werkzeug.contrib.fixers import ProxyFix
 
 # extensions
-from flaskext.cache import Cache
+
+# flaskext.cache is replaced with flask.ext.cache in newer versions
+try:
+    from flask.ext.cache import Cache
+except:
+    from flaskext.cache import Cache
+
 from ratelimitcache import ratelimit, ratelimit_post
 
 # local includes

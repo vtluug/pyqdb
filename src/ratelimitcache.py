@@ -1,5 +1,9 @@
 from flask import request, current_app, abort
-from flaskext.cache import Cache
+
+try:
+    from flask.ext.cache import Cache
+except:
+    from flaskext.cache import Cache
 
 from datetime import datetime, timedelta
 
