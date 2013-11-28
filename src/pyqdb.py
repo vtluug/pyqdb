@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import string
+import logging
 
 # flask includes
 from flask import Flask, request, session, g, \
@@ -29,6 +30,7 @@ from basic_auth import FlaskRealmDigestDB
 from news import News
 from rest import build_link, add_loc_hdr, add_link_hdr
 
+
 # app config
 SECRET_KEY = '\xfb\x12\xdf\xa1@i\xd6>V\xc0\xbb\x8fp\x16#Z\x0b\x81\xeb\x16'
 DEBUG = True
@@ -52,6 +54,24 @@ navs = [
 
 authDB = FlaskRealmDigestDB('MyAuthRealm')
 authDB.add_user('admin', 'test')
+
+# Setup logging
+logger = logging.getLogger('pyqdb')
+logger.setLevel(logging.DEBUG)
+# create file handler which logs even debug messages
+fh = logging.FileHandler('pyqdb.log')
+fh.setLevel(logging.DEBUG)
+# create console handler with a higher log level
+ch = logging.StreamHandler()
+ch.setLevel(logging.ERROR)
+# create formatter and add it to the handlers
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+fh.setFormatter(formatter)
+ch.setFormatter(formatter)
+# add the handlers to the logger
+logger.addHandler(fh)
+logger.addHandler(ch)
+
 
 ## Routes and Handlers ##
 @app.route('/')
@@ -130,6 +150,14 @@ def create_quote_form():
     body_valid = True
 
     content = request.form['quote']
+
+    # strip trailing whitespace at each line
+    content_lines = content.splitlines()
+    for i,l in enumerate(content_lines):
+        content_lines[i] = l.rstrip()
+    content = '\n'.join(content_lines) 
+
+    logger.info(content)
     tags_raw = request.form['tags'] 
     # a smidgen of validation
     if len(tags_raw) > 100:
