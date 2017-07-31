@@ -1,13 +1,9 @@
 from flask import request, current_app, abort
-
-try:
-    from flask.ext.cache import Cache
-except:
-    from flaskext.cache import Cache
+from flask_cache import Cache
 
 from datetime import datetime, timedelta
 
-import functools, sha
+import functools, hashlib
 from functools import wraps
 
 

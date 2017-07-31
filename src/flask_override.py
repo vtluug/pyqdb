@@ -30,6 +30,6 @@ class Request(Request):
         return best in json_mimetypes and self.accept_mimetypes[best] > self.accept_mimetypes['text/html']
     
     def provided_json(self):
-        print self.mimetype
+        print(self.mimetype)
         return self.mimetype in json_mimetypes
 

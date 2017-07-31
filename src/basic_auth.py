@@ -1,18 +1,30 @@
 # -*- coding: utf-8 -*-
-# from http://flask.pocoo.org/snippets/31
-
 from functools import wraps
-import authdigest
-import flask
+from flask import request, Response
 
-class FlaskRealmDigestDB(authdigest.RealmDigestDB):
+class FlaskRealmDigestDB():
+    def __init__(self):
+        self.users = {}
+
     def requires_auth(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            request = flask.request
-            if not self.isAuthenticated(request):
-                return self.challenge()
-
+            auth = request.authorization
+            if not auth or not self.check_auth(auth.username, auth.password):
+                return authenticate()
             return f(*args, **kwargs)
-
         return decorated
+
+    def authenticate(self):
+        return Response(
+                'Login Required. RIP.', 401,
+                {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+    def check_auth(self, username, password):
+        return self.users[username] == password
+
+    def add_user(self, username, password):
+        self.users[username] = password
+
+    def isAuthenticated(self, request):
+        return request.authorization

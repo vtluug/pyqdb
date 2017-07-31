@@ -4,3 +4,4 @@ sqlalchemy
 pyyaml
 python-dateutil
 Flask-Cache
+flask_recaptcha

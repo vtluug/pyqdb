@@ -9,7 +9,7 @@ quote.tags = [ Tag("foo"), Tag("bar") ]
 
 db = db.SQLQuoteStore()
 db.put(quote)
-print quote.id
+print(quote.id)
 
 quote2 = db.get(quote.id)
 

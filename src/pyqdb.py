@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import sys
+
 import string
 import logging
 
@@ -8,16 +10,10 @@ import logging
 from flask import Flask, request, session, g, \
                   redirect, url_for, abort, render_template, \
                   flash, make_response
+from flask_cache import Cache
 from werkzeug.contrib.fixers import ProxyFix
 
 # extensions
-
-# flaskext.cache is replaced with flask.ext.cache in newer versions
-try:
-    from flask.ext.cache import Cache
-except:
-    from flaskext.cache import Cache
-
 from ratelimitcache import ratelimit, ratelimit_post
 
 # local includes
@@ -29,10 +25,12 @@ from sql import db_session # yuck, we shouldnt dep on this
 from basic_auth import FlaskRealmDigestDB
 from news import News
 from rest import build_link, add_loc_hdr, add_link_hdr
+from jinja2 import Markup
 
 
 # app config
-SECRET_KEY = '\xfb\x12\xdf\xa1@i\xd6>V\xc0\xbb\x8fp\x16#Z\x0b\x81\xeb\x16'
+#SECRET_KEY = '\xfb\x12\xdf\xa1@i\xd6>V\xc0\xbb\x8fp\x16#Z\x0b\x81\xeb\x16'
+SECRET_KEY = 'SUPERSECRETAPIKEY'
 DEBUG = True
 CACHE_TYPE = 'simple'
 
@@ -52,8 +50,8 @@ navs = [
     build_link('/quotes/new', 'pyqdb/quote/new', Quote.json_mimetype, title='Submit')
 ]
 
-authDB = FlaskRealmDigestDB('MyAuthRealm')
-authDB.add_user('admin', 'test')
+auth = FlaskRealmDigestDB()
+auth.add_user('admin', 'test')
 
 # Setup logging
 logger = logging.getLogger('pyqdb')
@@ -87,15 +85,17 @@ def welcome():
     return render_template('index.html', nav=navs, news=news.news)
 
 @app.route('/admin')
-@authDB.requires_auth
+@auth.requires_auth
 def admin():
     session['user'] = request.authorization.username
     return "Yup.\n Hello, %s" % (session['user'])
 
 @app.route('/auth')
 def authApi():
-    if not authDB.isAuthenticated(request):
-        return authDB.challenge()
+    if not request.authorization:
+        return auth.authenticate()
+    print("REQUEST", file=sys.stderr)
+    print(request, file=sys.stderr)
     return redirect('/')
 
 @app.route('/quotes/new', methods=['GET'])
@@ -114,32 +114,41 @@ def create_quote():
     else:
         return create_quote_form()
 
-def validate_quote(body, tags):
+def validate_quote(body, tags, key=''):
     body_valid = True
     tags_valid = True
+    key_valid = key == SECRET_KEY
     if len(body) > 10*1024: # 10kb, arbitrary limit
         body_valid = False
     for tag in tags:
         if len(tag) > 15:
             tags_valid = False
             break
-    return body_valid, tags_valid
+    return body_valid, tags_valid, key_valid
 
 def create_quote_json():
     ip = request.remote_addr
     data = request.json
+    
+    try:
+        body_valid, tags_valid, key_valid = validate_quote(data['body'], data['tags'], data['key'])
+    except KeyError:
+        quote = ''
+        body_valid = False
+        tags_valid = False
+        key_valid = False
 
-    body_valid, tags_valid = validate_quote(data['body'], data['tags'])
-
-    if body_valid and tags_valid:
+    if key_valid and body_valid and tags_valid:
         quote = Quote(data['body'], ip)
-        quote.tags = map(Tag, data['tags'])
+        quote.tags = list(map(Tag, data['tags'].split(',')))
         quote = db.put(quote) # grabbing return val isn't strictly necessary
+    else:
+        quote = ''
 
     if request.wants_json():
-        return create_quote_resp_json(quote, body_valid, tags_valid)
+        return create_quote_resp_json(quote, body_valid, tags_valid, key_valid)
     else:
-        return create_quote_resp_html(quote, body_valid, tags_valid)
+        return create_quote_resp_html(quote, body_valid, tags_valid, key_valid)
      
 def create_quote_form():
     ip = request.remote_addr
@@ -163,13 +172,13 @@ def create_quote_form():
     if len(tags_raw) > 100:
         tags_valid = False
     else:
-        tags = map(string.strip, tags_raw.split(','))
-        body_valid, tags_valid = validate_quote(content, tags)
+        tags = list(map(str.strip, tags_raw.split(',')))
+        body_valid, tags_valid, key_valid = validate_quote(content, tags)
 
     quote = None
     if body_valid and tags_valid:
         quote = Quote(content, ip)
-        quote.tags = map(Tag, tags)
+        quote.tags = list(map(Tag, tags))
         quote = db.put(quote) # grabbing return val isn't strictly necessary
 
     if request.wants_json():
@@ -177,13 +186,15 @@ def create_quote_form():
     else:
         return create_quote_resp_html(quote, body_valid, tags_valid)
 
-def create_quote_resp_json(quote, body_valid, tags_valid): 
+def create_quote_resp_json(quote, body_valid, tags_valid, key_valid): 
     error = { 'error': 'validation', 'error_msg': '' }
     if not body_valid:
         error['error_msg'] += 'Body too large'
     if not tags_valid:
         error['error_msg'] += 'Tags too large'
-    if not body_valid or not tags_valid:
+    if not key_valid:
+        error['error_msg'] += 'Invalid Key'
+    if not body_valid or not tags_valid or not key_valid:
         rs = jsonify(error, 'application/vnd.pyqdb-error+json')
         rs.status_code = 413
         return rs
@@ -193,13 +204,15 @@ def create_quote_resp_json(quote, body_valid, tags_valid):
     rs.status_code = 201
     return rs 
 
-def create_quote_resp_html(quote, body_valid, tags_valid): 
+def create_quote_resp_html(quote, body_valid, tags_valid, key_valid): 
     if not body_valid:
         flash('Error: Quote too big', 'error')
     if not tags_valid:
         flash('Error: Tags too big', 'error')
+    if not key_valid:
+        flash('Error: Key Invalid', 'error')
 
-    if body_valid and tags_valid:
+    if body_valid and tags_valid and key_valid:
         flash('Quote Submitted. Thanks!', 'success')
 
     return render_template('message.html', nav=navs)
@@ -221,7 +234,7 @@ def parse_qs(args, tag = None):
 def latest():
     incr,start,next,prev = parse_qs(request.args)
     quotes = db.latest(incr, start)
-    admin = authDB.isAuthenticated(request)
+    admin = auth.isAuthenticated
     if request.wants_json():
         next_link = '/quotes?start=%s' % (next)
         prev_link = '/quotes?start=%s' % (prev)
@@ -261,7 +274,8 @@ def tags():
 def tag(tag):
     incr,start,next,prev = parse_qs(request.args, tag)
     quotes = db.tag(tag, incr, start)
-    admin = authDB.isAuthenticated(request)
+    admin = auth.isAuthenticated(request)
+    print(request)
     page = 'tags/%s' % (tag)
     if request.wants_json():
         return json_nyi()
@@ -270,14 +284,16 @@ def tag(tag):
 @app.route('/top')
 def top():
     incr,start,next,prev = parse_qs(request.args)
-    admin = authDB.isAuthenticated(request)
+    admin = auth.isAuthenticated(request)
+    print(request)
     if request.wants_json():
         return json_nyi()
     return render_template('quotes.html', nav=navs, quotes=db.top(incr, start), page='top', next=next, prev=prev, isAdmin=admin)
 
 @app.route('/random')
 def random():
-    admin = authDB.isAuthenticated(request)
+    admin = auth.isAuthenticated(request)
+    print(request)
     if request.wants_json():
         return json_nyi()
     return render_template('quotes.html', nav=navs, quotes=db.random(15), isAdmin=admin)
@@ -285,7 +301,8 @@ def random():
 @app.route('/quotes/<int:quote_id>')
 def single(quote_id):
     quotes = [ db.get(quote_id) ]
-    admin = authDB.isAuthenticated(request)
+    admin = auth.isAuthenticated(request)
+    print(request)
     if None in quotes:
         abort(404)
     if request.wants_json():
@@ -294,7 +311,7 @@ def single(quote_id):
 
 @app.route('/quotes/<int:quote_id>', methods=['DELETE'])
 def remove(quote_id):
-    if not 'user' in session:
+    if not auth.isAuthenticated:
         abort(403)
     quote = db.get(quote_id)
     if quote is None:
