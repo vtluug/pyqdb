@@ -39,7 +39,7 @@ app.request_class = flask_override.Request
 app.config.from_object(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 
-cache = Cache(app)
+cache = Cache(app, config={'CACHE_TYPE': CACHE_TYPE})
 
 navs = [
     build_link('/top', 'pyqdb/quotes', Quote.list_json_mimetype, title='Top'),
@@ -182,9 +182,9 @@ def create_quote_form():
         quote = db.put(quote) # grabbing return val isn't strictly necessary
 
     if request.wants_json():
-        return create_quote_resp_json(quote, body_valid, tags_valid)
+        return create_quote_resp_json(quote, body_valid, tags_valid, True)
     else:
-        return create_quote_resp_html(quote, body_valid, tags_valid)
+        return create_quote_resp_html(quote, body_valid, tags_valid, True)
 
 def create_quote_resp_json(quote, body_valid, tags_valid, key_valid): 
     error = { 'error': 'validation', 'error_msg': '' }
@@ -234,7 +234,7 @@ def parse_qs(args, tag = None):
 def latest():
     incr,start,next,prev = parse_qs(request.args)
     quotes = db.latest(incr, start)
-    admin = auth.isAuthenticated
+    admin = auth.isAuthenticated(request)
     if request.wants_json():
         next_link = '/quotes?start=%s' % (next)
         prev_link = '/quotes?start=%s' % (prev)
@@ -311,7 +311,7 @@ def single(quote_id):
 
 @app.route('/quotes/<int:quote_id>', methods=['DELETE'])
 def remove(quote_id):
-    if not auth.isAuthenticated:
+    if not auth.isAuthenticated(request):
         abort(403)
     quote = db.get(quote_id)
     if quote is None:
