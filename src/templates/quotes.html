@@ -2,8 +2,8 @@
 {% block content %}
 <div id="quotes-content">
 <div class="quote-browser" id="quote-browser-top">
-{% if next %}
 <a href="/{{page}}?start={{ prev }}" class="prev-page">← Previous Page</a>
+{% if next %}
 <a href="/{{page}}?start={{ next }}" class="next-page">Next Page →</a>
 {% endif %}
 </div>
@@ -16,8 +16,8 @@ Quote Browser
 </h2>
 {%include 'quotes_content.html' %}
 <div class="quote-browser" id="quote-browser-bottom">
-{% if prev %}
 <a href="/{{page}}?start={{ prev }}" class="prev-page">← Previous Page</a>
+{% if next %}
 <a href="/{{page}}?start={{ next }}" class="next-page">Next Page →</a>
 {%endif%}
 </div>
