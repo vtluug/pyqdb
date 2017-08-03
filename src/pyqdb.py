@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
-
 import string
 import logging
 
@@ -94,8 +92,6 @@ def admin():
 def authApi():
     if not request.authorization:
         return auth.authenticate()
-    print("REQUEST", file=sys.stderr)
-    print(request, file=sys.stderr)
     return redirect('/')
 
 @app.route('/quotes/new', methods=['GET'])
@@ -275,7 +271,6 @@ def tag(tag):
     incr,start,next,prev = parse_qs(request.args, tag)
     quotes = db.tag(tag, incr, start)
     admin = auth.isAuthenticated(request)
-    print(request)
     page = 'tags/%s' % (tag)
     if request.wants_json():
         return json_nyi()
@@ -285,7 +280,6 @@ def tag(tag):
 def top():
     incr,start,next,prev = parse_qs(request.args)
     admin = auth.isAuthenticated(request)
-    print(request)
     if request.wants_json():
         return json_nyi()
     return render_template('quotes.html', nav=navs, quotes=db.top(incr, start), page='top', next=next, prev=prev, isAdmin=admin)
@@ -293,7 +287,6 @@ def top():
 @app.route('/random')
 def random():
     admin = auth.isAuthenticated(request)
-    print(request)
     if request.wants_json():
         return json_nyi()
     return render_template('quotes.html', nav=navs, quotes=db.random(15), isAdmin=admin)
@@ -302,7 +295,6 @@ def random():
 def single(quote_id):
     quotes = [ db.get(quote_id) ]
     admin = auth.isAuthenticated(request)
-    print(request)
     if None in quotes:
         abort(404)
     if request.wants_json():
