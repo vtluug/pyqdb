@@ -345,10 +345,6 @@ def fetch_votes(quote_id):
     }
     return jsonify(json, Vote.json_mimetype)
 
-@app.route('/robots.txt')
-def robots():
-    return render_template('robots.txt')
-
 @app.teardown_request
 def shutdown_session(exception=None):
     db_session.remove()
