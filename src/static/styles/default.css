@@ -44,7 +44,8 @@ h1 {
 
 pre {
     font-family: 'Inconsolata', Consolas, Menlo, Monaco, Lucida Console, Liberation Mono, Dejavu Sans Mono, Courier New, monospace, serif;
-   font-size: medium;
+    font-size: medium;
+    white-space: pre-wrap;
 }
 
 .quote-header {
