@@ -17,7 +17,7 @@ Setup
 3. Setup Database
 
     ```
-    cd src;
+    cd src
     ./sql_setup.py
     ```
 
