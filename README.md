@@ -8,13 +8,13 @@ Setup
 
 1. Check out source code
 
-    ```git clone git://github.com/Ramblurr/pyqdb.git```
+    ```git clone git://github.com/vtluug/pyqdb.git```
 
 2. Install dependencies
 
     ```pip install -U -r requirements.txt```
 
-3. Setup Database
+3. Setup Database. This creates the file `./src/quotes.db` using sqlite.
 
     ```cd src;
     ./sql_setup.py```
