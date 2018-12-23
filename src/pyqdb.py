@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import string
+# system includes
+import os
 import logging
+import string
 
 # flask includes
 from flask import Flask, request, session, g, \
@@ -27,8 +29,10 @@ from jinja2 import Markup
 
 
 # app config
-#SECRET_KEY = '\xfb\x12\xdf\xa1@i\xd6>V\xc0\xbb\x8fp\x16#Z\x0b\x81\xeb\x16'
-SECRET_KEY = 'SUPERSECRETAPIKEY'
+try:
+    SECRET_KEY = os.environ['PYQDB_SECRET_KEY']
+except:
+    SECRET_KEY = 'SUPERSECRETAPIKEY'
 DEBUG = True
 CACHE_TYPE = 'simple'
 
