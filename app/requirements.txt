@@ -3,5 +3,5 @@ jinja2
 sqlalchemy
 pyyaml
 python-dateutil
-Flask-Cache
+flask-caching
 flask_recaptcha

@@ -12,13 +12,13 @@ Setup
 
 2. Install dependencies
 
-    `pip install -U -r requirements.txt`
+    `pip install -r app/requirements.txt`
 
-3. Setup Database. This creates the file `./src/quotes.db` using sqlite.
+3. Setup Database. This creates the file `./app/quotes.db` if it doesn't already exist using sqlite. If docker is used, `app` is copied as `/app` and `/app/quotes.db` is a volume.
 
     ```
-    cd src
-    ./sql_setup.py
+    cd app
+    ./prestart.sh
     ```
 
 4. Start server

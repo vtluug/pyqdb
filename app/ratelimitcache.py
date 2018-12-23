@@ -1,5 +1,5 @@
 from flask import request, current_app, abort
-from flask_cache import Cache
+from flask_caching import Cache
 
 from datetime import datetime, timedelta
 

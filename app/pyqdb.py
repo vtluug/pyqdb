@@ -10,7 +10,7 @@ import string
 from flask import Flask, request, session, g, \
                   redirect, url_for, abort, render_template, \
                   flash, make_response
-from flask_cache import Cache
+from flask_caching import Cache
 from werkzeug.contrib.fixers import ProxyFix
 
 # extensions
