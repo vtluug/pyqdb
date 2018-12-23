@@ -23,7 +23,7 @@ Setup
 
 4. Start server
 
-    `python pyqdb.py`
+    `python main.py`
 
 API
 ---
