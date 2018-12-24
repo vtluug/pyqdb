@@ -53,7 +53,7 @@ navs = [
 ]
 
 auth = FlaskRealmDigestDB()
-auth.add_user('admin', 'test')
+auth.add_user('admin', SECRET_KEY)
 
 # Setup logging
 logger = logging.getLogger('pyqdb')
@@ -92,11 +92,13 @@ def admin():
     session['user'] = request.authorization.username
     return "Yup.\n Hello, %s" % (session['user'])
 
-@app.route('/auth')
-def authApi():
-    if not request.authorization:
-        return auth.authenticate()
-    return redirect('/')
+# Broken TODO fix this shit
+# Use manual deletion for now
+#@app.route('/auth')
+#def authApi():
+#    if not request.authorization:
+#        return auth.authenticate()
+#    return redirect('/')
 
 @app.route('/quotes/new', methods=['GET'])
 def new_quote():
