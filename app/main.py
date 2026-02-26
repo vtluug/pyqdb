@@ -11,7 +11,7 @@ from flask import Flask, request, session, g, \
                   redirect, url_for, abort, render_template, \
                   flash, make_response
 from flask_caching import Cache
-from werkzeug.contrib.fixers import ProxyFix
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 # extensions
 from ratelimitcache import ratelimit, ratelimit_post
@@ -25,7 +25,7 @@ from sql import db_session # yuck, we shouldnt dep on this
 from basic_auth import FlaskRealmDigestDB
 from news import News
 from rest import build_link, add_loc_hdr, add_link_hdr
-from jinja2 import Markup
+from markupsafe import Markup
 
 
 # app config
