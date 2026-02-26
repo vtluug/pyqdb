@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from flask import Flask, Request, json, abort
-from werkzeug.utils import cached_property
+from werkzeug import cached_property
 
 from jsonify import QuoteDecoder
 from data_models import Quote,Tag
